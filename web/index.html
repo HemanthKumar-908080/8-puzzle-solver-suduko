@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f5f0">
+  <meta name="description" content="An interactive AI lab for A* search and Sudoku constraint satisfaction.">
+  <title>Puzzle Lab — A* and CSP</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <div class="site-shell">
+    <header class="topbar">
+      <a class="brand" href="#top" aria-label="Puzzle Lab home">
+        <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
+        <span>Puzzle<span class="brand-light">Lab</span></span>
+      </a>
+      <div class="course-tag"><span class="live-dot"></span> FOUNDATIONS OF AI <span class="tag-divider">/</span> BATCH 11</div>
+    </header>
+
+    <main id="top">
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow"><span class="eyebrow-line"></span> SEARCH × CONSTRAINTS</p>
+          <h1>Two puzzles.<br><span>Two kinds of reasoning.</span></h1>
+          <p class="hero-lede">Explore how A* finds an optimal path — and how constraint propagation fills a Sudoku. Enter a board to see the algorithms think.</p>
+          <div class="hero-proof"><span class="proof-icon">✳</span><span>Explainable results, one move at a time.</span></div>
+        </div>
+        <div class="hero-art" aria-hidden="true">
+          <div class="art-orbit orbit-one"></div><div class="art-orbit orbit-two"></div>
+          <div class="art-tile tile-a">8</div><div class="art-tile tile-b">2</div><div class="art-tile tile-c">5</div>
+          <div class="art-spark spark-one">✳</div><div class="art-spark spark-two">·</div>
+          <div class="art-caption">THE NEXT MOVE<br><strong>is a reasoned one.</strong></div>
+        </div>
+      </section>
+
+      <nav class="mode-tabs" aria-label="Choose a solver">
+        <button class="mode-tab active" id="tab-puzzle" role="tab" aria-selected="true" aria-controls="panel-puzzle">
+          <span class="tab-number">01</span><span><strong>8-Puzzle</strong><small>A* heuristic search</small></span><span class="tab-arrow">↗</span>
+        </button>
+        <button class="mode-tab" id="tab-sudoku" role="tab" aria-selected="false" aria-controls="panel-sudoku">
+          <span class="tab-number">02</span><span><strong>Sudoku</strong><small>Constraint satisfaction</small></span><span class="tab-arrow">↗</span>
+        </button>
+      </nav>
+
+      <section class="solver-panel" id="panel-puzzle" role="tabpanel" aria-labelledby="tab-puzzle">
+        <div class="section-heading">
+          <div><p class="eyebrow">HEURISTIC SEARCH</p><h2>Give the puzzle a starting point.</h2></div>
+          <span class="method-chip">A* · optimal path</span>
+        </div>
+        <div class="workbench puzzle-workbench">
+          <div class="input-card">
+            <div class="card-topline"><span class="step-label">YOUR BOARD</span><span class="quiet-label">0 = blank</span></div>
+            <div class="puzzle-input-grid" id="puzzle-input" aria-label="Enter the 8-puzzle board"></div>
+            <div class="input-note"><span class="note-dot"></span>Use every tile from 1 to 8 once. Leave one cell empty.</div>
+            <div class="button-row">
+              <button class="button button-primary" id="solve-puzzle"><span>Solve with A*</span><span aria-hidden="true">→</span></button>
+              <button class="button button-quiet" id="sample-puzzle">Load sample</button>
+            </div>
+            <p class="inline-error" id="puzzle-error" role="alert" hidden></p>
+          </div>
+          <div class="goal-card">
+            <div class="card-topline"><span class="step-label">GOAL STATE</span><span class="quiet-label">fixed target</span></div>
+            <div class="mini-board" aria-label="Goal board: 1 2 3 4 5 6 7 8 blank">
+              <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span class="empty-tile"></span>
+            </div>
+            <div class="goal-explainer"><span class="goal-icon">◎</span><span>The blank slides one square per move. Each move has equal cost.</span></div>
+            <div class="parity-rule"><span class="rule-label">BEFORE SEARCH</span><strong>Inversion parity checks solvability.</strong><p>Odd parity means no path exists — so A* can stop before expanding a node.</p></div>
+          </div>
+        </div>
+
+        <section class="results" id="puzzle-results" hidden aria-live="polite">
+          <div class="results-heading"><div><p class="eyebrow">SEARCH REPORT</p><h2>The path, and the work behind it.</h2></div><span class="success-pill" id="parity-result"></span></div>
+          <div class="insight-banner" id="puzzle-insight"></div>
+          <div class="metric-grid" id="heuristic-metrics"></div>
+          <div class="comparison-card">
+            <div class="card-heading-line"><div><p class="step-label">SAME BOARD · TWO HEURISTICS</p><h3>How much did each search explore?</h3></div><span class="table-note">Both return a shortest path</span></div>
+            <div class="table-wrap"><table><thead><tr><th>Heuristic</th><th>Solution cost</th><th>Nodes expanded</th><th>Nodes generated</th></tr></thead><tbody id="heuristic-table"></tbody></table></div>
+            <p class="comparison-footnote" id="comparison-footnote"></p>
+          </div>
+          <div class="explain-grid">
+            <div class="path-card">
+              <div class="card-heading-line"><div><p class="step-label">OPTIMAL MANHATTAN PATH</p><h3>Follow the blank.</h3></div><span class="step-counter" id="path-counter"></span></div>
+              <div class="solution-board" id="solution-board"></div>
+              <div class="path-controls"><button class="round-button" id="path-prev" aria-label="Previous move">←</button><div class="path-progress" id="path-progress"></div><button class="round-button" id="path-next" aria-label="Next move">→</button></div>
+              <div class="move-readout" id="move-readout"></div>
+            </div>
+            <div class="reason-card">
+              <div class="card-heading-line"><div><p class="step-label">WHY THIS STEP?</p><h3>Manhattan, tile by tile.</h3></div><span class="h-badge" id="h-badge"></span></div>
+              <p class="reason-intro">Each numbered tile contributes its row and column distance from its goal. The blank contributes zero.</p>
+              <div class="contribution-list" id="contribution-list"></div>
+              <div class="hint-box" id="hint-box"></div>
+              <div class="successor-list" id="successor-list"></div>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <section class="solver-panel" id="panel-sudoku" role="tabpanel" aria-labelledby="tab-sudoku" hidden>
+        <div class="section-heading">
+          <div><p class="eyebrow">CONSTRAINT SATISFACTION</p><h2>Fill the grid with consistent choices.</h2></div>
+          <span class="method-chip">4 methods · same clues</span>
+        </div>
+        <div class="workbench sudoku-workbench">
+          <div class="input-card sudoku-input-card">
+            <div class="card-topline"><span class="step-label">YOUR SUDOKU</span><label class="size-control">BOARD SIZE <select id="sudoku-size"><option value="4">4 × 4</option><option value="9">9 × 9</option></select></label></div>
+            <div class="sudoku-grid sudoku-grid-4" id="sudoku-input" aria-label="Enter a Sudoku board"></div>
+            <div class="input-note"><span class="note-dot"></span>Leave empty cells blank. Clues must not conflict.</div>
+            <div class="button-row"><button class="button button-primary" id="solve-sudoku"><span>Compare all 4 methods</span><span aria-hidden="true">→</span></button><button class="button button-quiet" id="sample-sudoku">Load sample</button></div>
+            <p class="inline-error" id="sudoku-error" role="alert" hidden></p>
+          </div>
+          <div class="csp-card">
+            <div class="card-topline"><span class="step-label">THE CSP MODEL</span><span class="quiet-label">Variables → domains → constraints</span></div>
+            <div class="csp-equation"><span class="csp-symbol">x<sub>r,c</sub></span><span class="csp-equals">∈</span><span class="domain-chip">candidate digits</span></div>
+            <div class="constraint-list"><div><span class="constraint-index">01</span><span><strong>Row</strong><small>Each digit appears once.</small></span></div><div><span class="constraint-index">02</span><span><strong>Column</strong><small>Each digit appears once.</small></span></div><div><span class="constraint-index">03</span><span><strong>Box</strong><small>Each digit appears once.</small></span></div></div>
+            <p class="csp-note">The solver compares how variable choice and domain propagation change the work.</p>
+          </div>
+        </div>
+        <section class="results" id="sudoku-results" hidden aria-live="polite">
+          <div class="results-heading"><div><p class="eyebrow">CSP COMPARISON</p><h2>Four strategies. One set of clues.</h2></div><span class="success-pill" id="sudoku-status"></span></div>
+          <div class="sudoku-results-grid"><div class="comparison-card"><div class="card-heading-line"><div><p class="step-label">SEARCH EFFORT</p><h3>Assignments, backtracks, runtime.</h3></div></div><div class="table-wrap"><table><thead><tr><th>Strategy</th><th>Assignments</th><th>Backtracks</th><th>Runtime</th></tr></thead><tbody id="sudoku-table"></tbody></table></div><p class="comparison-footnote">Runtime is measured locally and can vary between runs. Assignment counts are tentative branch choices; AC-3 may solve cells through propagation without branching.</p></div>
+            <div class="solution-sudoku-card"><div class="card-heading-line"><div><p class="step-label">SOLVED GRID</p><h3 id="sudoku-solution-title">Solution</h3></div><span class="solved-icon">✓</span></div><div class="sudoku-grid sudoku-grid-4" id="sudoku-solution"></div></div></div>
+          <div class="method-notes" id="method-notes"></div>
+        </section>
+      </section>
+
+      <section class="concept-strip">
+        <div><p class="eyebrow">A QUICK AI DISTINCTION</p><h2>Paths need search.<br><span>Assignments need constraints.</span></h2></div>
+        <div class="concept-copy"><p><strong>8-puzzle · state-space search</strong><br>A complete board is a state. A legal slide is an action. A* searches for the lowest-cost path.</p><p><strong>Sudoku · constraint satisfaction</strong><br>An empty cell is a variable. Candidate digits are its domain. Constraints remove inconsistent choices.</p></div>
+      </section>
+    </main>
+    <footer class="footer"><span>PUZZLE LAB <span class="footer-dot">·</span> Foundations of AI</span><span>Runs locally on your computer. No puzzle data is uploaded.</span></footer>
+  </div>
+</body>
+</html>

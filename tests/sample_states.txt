@@ -1,0 +1,7 @@
+# Row-major tiles; 0 is the blank.
+# Easy: solution cost 2
+1,2,3,4,0,6,7,5,8
+# Default comparison case: solution cost is printed by the program
+7,2,4,5,0,6,8,3,1
+# Unsolvable parity example: expected to be rejected
+1,2,3,4,5,6,8,7,0
